@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .balance {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #4caf50;
+        }
+
+        .form {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .form input,
+        .form select,
+        .form button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .form button {
+            flex-basis: calc(100% - 20px);
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .form button:hover {
+            background-color: #45a049;
+        }
+
+        .transactions {
+            text-align: center;
+        }
+
+        .transactions h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .transactions ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .transactions li {
+            background-color: #f2f2f2;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .transactions li.credit {
+            background-color: #d4edda;
+        }
+
+        .transactions li.debit {
+            background-color: #f8d7da;
+        }
+
+        .transactions .date {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            color: #ff0000;
+        }
+
+        .search-btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .popup-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            max-width: 80%;
+            overflow-y: auto;
+            position: absolute;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* .calendar-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        } */
+
+        .calendar-icon {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            color: #aaa;
+            cursor: pointer;
+        }
+
+        .calendar-icon:hover {
+            color: #666;
+        }
+
+        .calendar-input {
+            width: calc(100% - 30px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #4caf50;
+            color: white;
+        }
+        .calendar-input1{
+            width: calc(100% - 30px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #4caf50;
+            color: white;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .form input,
+            .form select,
+            .form button {
+                flex-basis: calc(100% - 10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-coins"></i> Money Tracker</h1>
+        <div class="balance">Balance: ₹ <span id="balance">0</span></div>
+        <div class="form">
+            <div><input type="number" id="initialBalance" placeholder="Initial Balance (INR)"></div>
+            <div><input type="text" id="purchaseName" placeholder="Purchase Name"></div>
+            <div><input type="number" id="price" placeholder="Price (INR)"></div>
+            <div class="calendar-container">
+                <input type="date" id="transactionDate" class="calendar-input" placeholder="Transaction Date">
+            </div>
+            <div>
+                <select id="transactionType">
+                    <option value="credit">Credit</option>
+                    <option value="debit">Debit</option>
+                </select>
+            </div>
+            <div><button onclick="addTransaction()"><i class="fas fa-plus"></i> Add Transaction</button></div>
+            <div><button class="search-btn" onclick="openPopup()"><i class="fas fa-search"></i> Search Transactions</button></div>
+        </div>
+        <div class="transactions">
+            <h2>Recent Transactions</h2>
+            <ul id="transactionList"></ul>
+        </div>
+    </div>
+    
+    
+    
+
+    <div id="searchPopup" class="popup">
+        <div class="popup-content">
+            <span class="close-btn" onclick="closePopup()">&times;</span>
+            <h2>Search Transactions</h2>
+            <div class="form">
+                <button onclick="searchLastDays(10)">Last 10 Days</button>
+                <button onclick="searchLastDays(30)">Last Month</button>
+                <button onclick="searchPastYear()">Past Year</button>
+            </div>
+            <div class="form">
+                <!-- <div class="calendar-container"> -->
+                    <input type="date" id="startDate" class="calendar-input1" placeholder="Start Date">
+                <center></div>
+                <!-- <div class="calendar-container"> -->
+                    <input type="date" id="endDate" class="calendar-input1" placeholder="End Date">
+                </div></center>
+                <button onclick="searchCustomRange()"><i class="fas fa-search"></i> Search</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            updateBalance();
+            loadTransactions();
+        });
+
+        function updateBalance() {
+            let balance = localStorage.getItem('balance') || 0;
+            document.getElementById('balance').textContent = balance;
+        }
+
+        function setInitialBalance() {
+            let initialBalance = parseFloat(document.getElementById('initialBalance').value);
+            localStorage.setItem('balance', initialBalance);
+            updateBalance();
+        }
+
+        function addTransaction() {
+            let purchaseName = document.getElementById('purchaseName').value;
+            let price = parseFloat(document.getElementById('price').value);
+            let transactionType = document.getElementById('transactionType').value;
+            let transactionDate = document.getElementById('transactionDate').value;
+
+            if (purchaseName && price && (transactionType === 'credit' || transactionType === 'debit')) {
+                let transaction = {
+                    name: purchaseName,
+                    amount: price,
+                    type: transactionType,
+                    date: transactionDate
+                };
+
+                let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+                transactions.push(transaction);
+                localStorage.setItem('transactions', JSON.stringify(transactions));
+
+                if (transactionType === 'credit') {
+                    localStorage.setItem('balance', parseFloat(localStorage.getItem('balance') || 0) + price);
+                } else {
+                    localStorage.setItem('balance', parseFloat(localStorage.getItem('balance') || 0) - price);
+                }
+
+                updateBalance();
+                loadTransactions();
+            } else {
+                alert('Please fill in all fields correctly.');
+            }
+        }
+
+        function loadTransactions() {
+            let transactionList = document.getElementById('transactionList');
+            transactionList.innerHTML = '';
+
+            let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+            transactions.forEach((transaction, index) => {
+                let listItem = document.createElement('li');
+                listItem.textContent = `${transaction.name}: ₹${transaction.amount} (${transaction.type})`;
+                listItem.classList.add(transaction.type);
+
+                let dateElement = document.createElement('div');
+                dateElement.textContent = transaction.date;
+                dateElement.classList.add('date');
+                listItem.appendChild(dateElement);
+
+                let deleteButton = document.createElement('button');
+                deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                deleteButton.classList.add('delete-btn');
+                deleteButton.addEventListener('click', () => {
+                    deleteTransaction(index);
+                });
+
+                listItem.appendChild(deleteButton);
+                transactionList.appendChild(listItem);
+            });
+        }
+
+        function deleteTransaction(index) {
+            let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            let deletedTransaction = transactions.splice(index, 1)[0];
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+
+            if (deletedTransaction.type === 'credit') {
+                localStorage.setItem('balance', parseFloat(localStorage.getItem('balance') || 0) - deletedTransaction.amount);
+            } else {
+                localStorage.setItem('balance', parseFloat(localStorage.getItem('balance') || 0) + deletedTransaction.amount);
+            }
+
+            updateBalance();
+            loadTransactions();
+        }
+
+        function openPopup() {
+            document.getElementById('searchPopup').style.display = 'flex';
+        }
+
+        function closePopup() {
+            document.getElementById('searchPopup').style.display = 'none';
+        }
+
+        function searchLastDays(days) {
+            let endDate = new Date();
+            let startDate = new Date(endDate);
+            startDate.setDate(startDate.getDate() - days);
+            searchTransactions(startDate, endDate);
+            closePopup();
+        }
+
+        function searchLastMonth() {
+            let endDate = new Date();
+            let startDate = new Date(endDate);
+            startDate.setMonth(startDate.getMonth() - 1);
+            searchTransactions(startDate, endDate);
+            closePopup();
+        }
+
+        function searchPastYear() {
+            let endDate = new Date();
+            let startDate = new Date(endDate);
+            startDate.setFullYear(startDate.getFullYear() - 1);
+            searchTransactions(startDate, endDate);
+            closePopup();
+        }
+
+        function searchCustomRange() {
+            let startDate = new Date(document.getElementById('startDate').value);
+            let endDate = new Date(document.getElementById('endDate').value);
+            searchTransactions(startDate, endDate);
+            closePopup();
+        }
+
+        function searchTransactions(startDate, endDate) {
+            let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+            let filteredTransactions = transactions.filter(transaction => {
+                let transactionDate = new Date(transaction.date);
+                return transactionDate >= startDate && transactionDate <= endDate;
+            });
+            displayFilteredTransactions(filteredTransactions);
+        }
+
+        function displayFilteredTransactions(transactions) {
+            let transactionList = document.getElementById('transactionList');
+            transactionList.innerHTML = '';
+
+            transactions.forEach(transaction => {
+                let listItem = document.createElement('li');
+                listItem.textContent = `${transaction.name}: ₹${transaction.amount} (${transaction.type})`;
+                listItem.classList.add(transaction.type);
+
+                let dateElement = document.createElement('div');
+                dateElement.textContent = transaction.date;
+                dateElement.classList.add('date');
+                listItem.appendChild(dateElement);
+
+                let deleteButton = document.createElement('button');
+                deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                deleteButton.classList.add('delete-btn');
+                deleteButton.addEventListener('click', () => {
+                    deleteTransaction(index);
+                });
+
+                listItem.appendChild(deleteButton);
+                transactionList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>
