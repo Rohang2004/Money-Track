@@ -251,6 +251,8 @@
             </div>
             <div><button onclick="addTransaction()"><i class="fas fa-plus"></i> Add Transaction</button></div>
             <div><button class="search-btn" onclick="openPopup()"><i class="fas fa-search"></i> Search Transactions</button></div>
+            <button onclick="refreshPage()">Refresh</button>
+
         </div>
         <div class="transactions">
             <h2>Recent Transactions</h2>
@@ -284,8 +286,9 @@
         document.addEventListener("DOMContentLoaded", function () {
             updateBalance();
             loadTransactions();
+            refresh();
         });
-
+        
         function updateBalance() {
             let balance = localStorage.getItem('balance') || 0;
             document.getElementById('balance').textContent = balance;
@@ -445,7 +448,10 @@
             });
         }
 
-        
+        function refreshPage() {
+            location.reload();
+        }
+
     </script>
 </body>
 </html>
