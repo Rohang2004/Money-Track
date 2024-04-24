@@ -22,15 +22,13 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        ::placeholder{
-            font-family: Verdana, Geneva, Tahoma, sans-serif;
-        }
         h1,h6 {
             text-align: center;
             color: #333;
             font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
             line-height: 0px;
         }
+
         h6{
             font-size: medium;
         }
@@ -77,17 +75,9 @@
             background-color: #3498DB;
             animation: fade 2s;
         }
-        .calendar-input:hover {
-            background-color: #3498DB;
-        }
 
         .transactions {
             text-align: center;
-        }
-        ::placeholder{
-            color: black;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-weight: ;
         }
 
         .transactions h2 {
@@ -149,7 +139,7 @@
             background-color: #0056b3;
         }
 
-        .popup {
+        .reminder-popup {
             position: fixed;
             top: 0;
             left: 0;
@@ -162,78 +152,23 @@
             z-index: 999;
         }
 
-        .popup-content {
+        .reminder-popup-content {
             background-color: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             max-width: 80%;
             overflow-y: auto;
-            position: absolute;
         }
-
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 20px;
+        span close-btn{
             cursor: pointer;
-        }
-
-        .calendar-icon {
-            position: absolute;
-            top: 50%;
-            right: 10px;
-            transform: translateY(-50%);
-            color: #aaa;
-            cursor: pointer;
-        }
-
-        .calendar-icon:hover {
-            color: #666;
-        }
-
-        .calendar-input {
-            width: calc(100% - 30px);
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #2D88CD;
-            color: white;
-        }
-        .calendar-input1{
-            width: calc(100% - 30px);
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #2D88CD;
-            color: white;
-        }
-
-        @media only screen and (max-width: 600px) {
-            .form input,
-            .form select,
-            .form button {
-                flex-basis: calc(100% - 10px);
-            }
-            
-        }
-        .clear{
-            background: none;
-            background-color: none;
-            border: none;
-            text-decoration: underline;
-            font-family: consols;
-            font-size: medium;
-            position: relative;
-            
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1><i class="fas fa-coins"></i> FinTraack</h1>
-        <h6>The Finance Traker</h6>
+        <h6>The Finance Tracker</h6>
         <div class="balance">Balance: ₹ <span id="balance">0</span></div>
         <div class="form">
             <div><input type="number" id="initialBalance" placeholder="Initial Balance (INR)"></div>
@@ -250,36 +185,28 @@
                 </select>
             </div>
             <div><button onclick="addTransaction()"><i class="fas fa-plus"></i> Add Transaction</button></div>
-            <div><button class="search-btn" onclick="openPopup()"><i class="fas fa-search"></i> Search Transactions</button></div>
+            <div><button class="search-btn" onclick="openReminderPopup()"><i class="fas fa-bell"></i> Reminders</button></div>
             <button onclick="refreshPage()">Refresh</button>
-
         </div>
         <div class="transactions">
             <h2>Recent Transactions</h2>
             <ul id="transactionList"></ul>
         </div>
     </div>
-    
-    <!-- Search Popup -->
-    <div id="searchPopup" class="popup">
-        <div class="popup-content">
-            <span class="close-btn" onclick="closePopup()">&times;</span>
-            <h2>Search Transactions</h2>
-            <div class="form">
-                <button onclick="searchLastDays(10)">Last 10 Days</button>
-                <button onclick="searchLastDays(30)">Last Month</button>
-                <button onclick="searchPastYear()">Past Year</button>
-            </div>
-            <div class="form">
-                <input type="date" id="startDate" class="calendar-input1" placeholder="Start Date">
-                <input type="date" id="endDate" class="calendar-input1" placeholder="End Date">
-                <button onclick="searchCustomRange()"><i class="fas fa-search"></i> Search</button>
-            </div>
-            <div class="form">
-                
-            </div>
+
+    <!-- Reminders Popup -->
+    <div id="reminderPopup" class="reminder-popup">
+        <div class="reminder-popup-content">
+            <span class="close-btn" onclick="closeReminderPopup()">&times;</span>
+            <h2>Reminders</h2>
+            <form id="addReminderForm">
+                <input type="text" id="reminderText" placeholder="Enter reminder text">
+                <button type="submit"><i class="fas fa-plus"></i> Add Reminder</button>
+            </form>
+            <ul id="reminderList"></ul>
         </div>
     </div>
+    <!-- End of Reminders Popup -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
     <script>
@@ -374,84 +301,65 @@
             loadTransactions();
         }
 
-        function openPopup() {
-            document.getElementById('searchPopup').style.display = 'flex';
+        function refreshPage() {
+            location.reload();
         }
 
-        function closePopup() {
-            document.getElementById('searchPopup').style.display = 'none';
+        // Reminders functionality
+        function openReminderPopup() {
+            document.getElementById('reminderPopup').style.display = 'flex';
+            displayReminders();
         }
 
-        function searchLastDays(days) {
-            let endDate = new Date();
-            let startDate = new Date(endDate);
-            startDate.setDate(startDate.getDate() - days);
-            searchTransactions(startDate, endDate);
-            closePopup();
+        function closeReminderPopup() {
+            document.getElementById('reminderPopup').style.display = 'none';
         }
 
-        function searchLastMonth() {
-            let endDate = new Date();
-            let startDate = new Date(endDate);
-            startDate.setMonth(startDate.getMonth() - 1);
-            searchTransactions(startDate, endDate);
-            closePopup();
-        }
+        function displayReminders() {
+            let reminderList = document.getElementById('reminderList');
+            reminderList.innerHTML = '';
 
-        function searchPastYear() {
-            let endDate = new Date();
-            let startDate = new Date(endDate);
-            startDate.setFullYear(startDate.getFullYear() - 1);
-            searchTransactions(startDate, endDate);
-            closePopup();
-        }
+            let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
 
-        function searchCustomRange() {
-            let startDate = new Date(document.getElementById('startDate').value);
-            let endDate = new Date(document.getElementById('endDate').value);
-            searchTransactions(startDate, endDate);
-            closePopup();
-        }
-
-        function searchTransactions(startDate, endDate) {
-            let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-            let filteredTransactions = transactions.filter(transaction => {
-                let transactionDate = new Date(transaction.date);
-                return transactionDate >= startDate && transactionDate <= endDate;
-            });
-            displayFilteredTransactions(filteredTransactions);
-        }
-
-        function displayFilteredTransactions(transactions) {
-            let transactionList = document.getElementById('transactionList');
-            transactionList.innerHTML = '';
-
-            transactions.forEach(transaction => {
+            reminders.forEach((reminder, index) => {
                 let listItem = document.createElement('li');
-                listItem.textContent = `${transaction.name}: ₹${transaction.amount} (${transaction.type})`;
-                listItem.classList.add(transaction.type);
-
-                let dateElement = document.createElement('div');
-                dateElement.textContent = transaction.date;
-                dateElement.classList.add('date');
-                listItem.appendChild(dateElement);
+                listItem.textContent = reminder.text;
 
                 let deleteButton = document.createElement('button');
                 deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
                 deleteButton.classList.add('delete-btn');
                 deleteButton.addEventListener('click', () => {
-                    deleteTransaction(index);
+                    deleteReminder(index);
+                    displayReminders(); // Update the displayed reminders after deletion
                 });
 
                 listItem.appendChild(deleteButton);
-                transactionList.appendChild(listItem);
+                reminderList.appendChild(listItem);
             });
         }
 
-        function refreshPage() {
-            location.reload();
+        function deleteReminder(index) {
+            let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
+            reminders.splice(index, 1);
+            localStorage.setItem('reminders', JSON.stringify(reminders));
         }
 
+        // Add reminder functionality
+        document.getElementById('addReminderForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            let reminderText = document.getElementById('reminderText').value.trim();
+            if (reminderText !== '') {
+                addReminder(reminderText);
+                displayReminders();
+                document.getElementById('reminderText').value = '';
+            }
+        });
+
+        function addReminder(text) {
+            let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
+            reminders.push({ text: text });
+            localStorage.setItem('reminders', JSON.stringify(reminders));
+        }
     </script>
 </body>
 </html>
